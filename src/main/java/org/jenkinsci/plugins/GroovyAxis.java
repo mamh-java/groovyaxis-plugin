@@ -2,13 +2,13 @@ package org.jenkinsci.plugins;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.sun.org.apache.xml.internal.resolver.helpers.PublicId;
 import groovy.lang.GroovyShell;
 import hudson.Extension;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisDescriptor;
-import hudson.util.FormFieldValidator;
+import hudson.matrix.MatrixBuild;
 import hudson.util.FormValidation;
+import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -22,15 +22,28 @@ import java.util.List;
 public class GroovyAxis extends Axis {
 
     private String groovyString;
+    private List<String> computedValues;
 
     @DataBoundConstructor
-    public GroovyAxis(String name, String valueString) {
-        super(name, evaluateGroovy(valueString));
-        groovyString = valueString;
+    public GroovyAxis(String name, String groovyString, List<String> computedValues) {
+        super(name, evaluateGroovy(groovyString));
+        this.computedValues = computedValues;
+        this.groovyString = groovyString;
     }
 
     public String getGroovyString() {
         return groovyString;
+    }
+
+    @Override
+    public List<String> rebuild(MatrixBuild.MatrixBuildExecution context) {
+        computedValues = evaluateGroovy(groovyString);
+        return computedValues;
+    }
+
+    @Override
+    public List<String> getValues() {
+        return computedValues;
     }
 
     static private List<String> evaluateGroovy(String groovyExpression) {
@@ -47,6 +60,8 @@ public class GroovyAxis extends Axis {
                     values.add((String) object);
                 }
             }
+        } else if (result instanceof String) {
+            values.add((String) result);
         }
 
         if (values.isEmpty()) {
@@ -64,10 +79,26 @@ public class GroovyAxis extends Axis {
             return "GroovyAxis";
         }
 
-        public FormValidation doTestGroovyScript(StaplerRequest req,
-                                     StaplerResponse rsp,
-        @QueryParameter("valueString") final String valueString) throws IOException, ServletException {
-            return FormValidation.ok("[ " + Joiner.on(", ").join(GroovyAxis.evaluateGroovy(valueString)) + " ]");
+        @Override
+        public Axis newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            return new GroovyAxis(
+                    req.getParameter("name"),
+                    req.getParameter("valueString"),
+                    GroovyAxis.evaluateGroovy(req.getParameter("valueString"))
+            );
+        }
+
+        public FormValidation doTestGroovyScript(
+                StaplerRequest req,
+                StaplerResponse rsp,
+                @QueryParameter("valueString") final String valueString) throws IOException, ServletException {
+            return FormValidation.ok(
+                    new StringBuilder()
+                            .append("[ ")
+                            .append(Joiner.on(", ").join(GroovyAxis.evaluateGroovy(valueString)))
+                            .append(" ]")
+                            .toString()
+            );
         }
 
     }

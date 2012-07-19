@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.399</version>
+        <version>1.472</version>
         <!-- which version of Jenkins is this plugin built against? -->
     </parent>
 
@@ -33,7 +33,7 @@
         </repository>
         <site>
             <id>github-project-site</id>
-            <url>gitsite:git@git@github.com:jenkinsci/groovyaxis-plugin</url>
+            <url>gitsite:git@github.com:jenkinsci/groovyaxis-plugin</url>
         </site>
     </distributionManagement>
 
@@ -51,6 +51,14 @@
             <url>http://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>12.0</version>
+        </dependency>
+    </dependencies>
 
     <properties>
         <maven.version>3.0.1</maven.version>
