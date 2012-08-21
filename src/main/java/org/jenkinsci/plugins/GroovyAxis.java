@@ -26,7 +26,7 @@ public class GroovyAxis extends Axis {
 
     @DataBoundConstructor
     public GroovyAxis(String name, String groovyString, List<String> computedValues) {
-        super(name, evaluateGroovy(groovyString));
+        super(name, evaluateGroovy(groovyString, null));
         this.computedValues = computedValues;
         this.groovyString = groovyString;
     }
@@ -37,7 +37,7 @@ public class GroovyAxis extends Axis {
 
     @Override
     public List<String> rebuild(MatrixBuild.MatrixBuildExecution context) {
-        computedValues = evaluateGroovy(groovyString);
+        computedValues = evaluateGroovy(groovyString, context);
         return computedValues;
     }
 
@@ -46,8 +46,9 @@ public class GroovyAxis extends Axis {
         return computedValues;
     }
 
-    static private List<String> evaluateGroovy(String groovyExpression) {
+    static private List<String> evaluateGroovy(String groovyExpression, MatrixBuild.MatrixBuildExecution context) {
         GroovyShell shell = new GroovyShell();
+        shell.setVariable("context", context);
         Object result = shell.evaluate(groovyExpression);
 
         List<String> values = Lists.newArrayList();
@@ -84,7 +85,7 @@ public class GroovyAxis extends Axis {
             return new GroovyAxis(
                     formData.getString("name"),
                     formData.getString("valueString"),
-                    GroovyAxis.evaluateGroovy(formData.getString("valueString"))
+                    GroovyAxis.evaluateGroovy(formData.getString("valueString"), null)
             );
         }
 
@@ -95,7 +96,7 @@ public class GroovyAxis extends Axis {
             return FormValidation.ok(
                     new StringBuilder()
                             .append("[ ")
-                            .append(Joiner.on(", ").join(GroovyAxis.evaluateGroovy(valueString)))
+                            .append(Joiner.on(", ").join(GroovyAxis.evaluateGroovy(valueString, null)))
                             .append(" ]")
                             .toString()
             );
