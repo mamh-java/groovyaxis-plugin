@@ -82,9 +82,9 @@ public class GroovyAxis extends Axis {
         @Override
         public Axis newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             return new GroovyAxis(
-                    req.getParameter("name"),
-                    req.getParameter("valueString"),
-                    GroovyAxis.evaluateGroovy(req.getParameter("valueString"))
+                    formData.getString("name"),
+                    formData.getString("valueString"),
+                    GroovyAxis.evaluateGroovy(formData.getString("valueString"))
             );
         }
 
